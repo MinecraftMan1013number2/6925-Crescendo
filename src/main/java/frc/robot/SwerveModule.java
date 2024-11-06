@@ -89,4 +89,11 @@ public class SwerveModule {
             Rotation2d.fromRotations(mAngleMotor.getPosition().getValue())
         );
     }
+
+    /**
+     * SysID stuff
+     */
+    public void setVoltage(double volts) {
+        mDriveMotor.setVoltage(volts);
+    }
 }

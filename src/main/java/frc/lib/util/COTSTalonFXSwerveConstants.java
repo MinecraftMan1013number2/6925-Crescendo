@@ -315,6 +315,36 @@ public class COTSTalonFXSwerveConstants {
                 public static final double SDSMK4i_L3_16T = (5.357 / 1.0);
             }
         }
+        
+        /** CUSTOM */
+        /** Swerve Drive Specialties - MK4c Module */
+        public static final class MK4c {
+            /** Swerve Drive Specialties - MK4c Module (Kraken X60)*/
+            public static final COTSTalonFXSwerveConstants KrakenX60(double driveGearRatio) {
+                double wheelDiameter = Units.inchesToMeters(4.0);
+        
+                /** 12.8 : 1 */
+                double angleGearRatio = (12.8 / 1.0);
+        
+                double angleKP = 1.0;
+                double angleKI = 0.0;
+                double angleKD = 0.0;
+        
+                InvertedValue driveMotorInvert = InvertedValue.CounterClockwise_Positive;
+                InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
+                SensorDirectionValue cancoderInvert = SensorDirectionValue.CounterClockwise_Positive;
+                return new COTSTalonFXSwerveConstants(wheelDiameter, angleGearRatio, driveGearRatio, angleKP, angleKI, angleKD, driveMotorInvert, angleMotorInvert, cancoderInvert);
+            }
+
+            public static final class driveRatios{
+                /** SDS MK4c - (7.13 : 1) */
+                public static final double L1 = (7.13 / 1.0);
+                /** SDS MK4c - (5.9 : 1) */
+                public static final double L2 = (5.9 / 1.0);
+                /** SDS MK4c - (5.36 : 1) */
+                public static final double L3 = (5.36 / 1.0);
+            }
+        }
     }
 }
 

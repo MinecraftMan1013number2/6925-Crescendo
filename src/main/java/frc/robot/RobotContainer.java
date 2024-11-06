@@ -17,6 +17,7 @@ import frc.robot.commands.teleop.ShooterCommand;
 import frc.robot.commands.teleop.TeleopSwerve;
 import frc.robot.commands.teleop.climber.ClimberLeftCommand;
 import frc.robot.commands.teleop.climber.ClimberRightCommand;
+import frc.robot.photonvision.PhotonVisionHandler;
 import frc.robot.subsystems.SwerveSubsys;
 import frc.robot.subsystems.Intake.IntakeConstants;
 import frc.robot.subsystems.Intake.IntakeSubsys;
@@ -45,12 +46,13 @@ public class RobotContainer {
     public final IntakeSubsys s_Intake = new IntakeSubsys();
     public final ClimberLeft s_ClimberLeft = new ClimberLeft();
     public final ClimberRight s_ClimberRight = new ClimberRight();
+    private final PhotonVisionHandler photonVision;
 
      /* AutoChooser */
     private final SendableChooser<Command> autoChooser;
 
+    /* Instance */
     public static RobotContainer instance;
-    
     public static RobotContainer getInstance() {
         return instance;
     }
@@ -64,30 +66,7 @@ public class RobotContainer {
         configureButtonBindings();
 
         // Register PathPlanner named commands
-        NamedCommands.registerCommand("Spin Up Shooter", new InstantCommand(() -> s_Shooter.setMotor(-0.75,-0.75)));
-
-        NamedCommands.registerCommand("Ground Intake", new InstantCommand(() -> {
-            s_Intake.setPivotState(PivotState.GROUND);
-            s_Intake.setIndexerSpeed(IndexerSpeed.INTAKE);
-        }, s_Intake));
-        
-        NamedCommands.registerCommand("Stow Intake", new InstantCommand(() -> {
-            s_Intake.setPivotState(PivotState.STOW);
-            s_Intake.setIndexerSpeed(IndexerSpeed.PULSE);
-        }, s_Intake));
-        
-        NamedCommands.registerCommand("Score Gamepiece", new InstantCommand(() -> {
-            s_Intake.setPivotState(PivotState.NONE);
-            s_Intake.setIndexerSpeed(IndexerSpeed.FEED_SHOOTER);
-        }, s_Intake));
-        
-        NamedCommands.registerCommand("Stop Indexer", new InstantCommand(() -> s_Intake.setIndexerSpeed(IndexerSpeed.NONE), s_Intake));
-
-        NamedCommands.registerCommand("Stop Shooter", new InstantCommand(() -> s_Shooter.shooterOff(), s_Shooter));
-
-        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> s_Intake.setIndexerSpeed(IndexerSpeed.INTAKE), s_Intake));
-
-        
+        registerNamedCommands();
 
         // Auto chooser
         autoChooser = AutoBuilder.buildAutoChooser(); // Default auto will be `Commands.none()`
@@ -95,10 +74,14 @@ public class RobotContainer {
 
         // Setup camera
         CameraServer.startAutomaticCapture();
+
+        // Setup photonvision
+        photonVision = new PhotonVisionHandler("OV9782");
+        // photonVision = null;
     }
 
     private void configureButtonBindings() {
-        /* Driver Buttons */
+        // Driver Buttons
         s_Swerve.setDefaultCommand(
             new TeleopSwerve(
                 s_Swerve, 
@@ -108,8 +91,12 @@ public class RobotContainer {
                 // () -> robotCentric.getAsBoolean()
             )
         );
-        // Zerp Gyro
-        new JoystickButton(driver, XboxController.Button.kY.value).onTrue(new InstantCommand(() -> s_Swerve.zeroHeading()));
+
+        new JoystickButton(driver, XboxController.Button.kY.value).whileTrue(new TeleopSwerve(s_Swerve, ()->1, ()->0, ()->0));
+        new JoystickButton(driver, XboxController.Button.kA.value).whileTrue(new TeleopSwerve(s_Swerve, ()->-1, ()->0, ()->0));
+
+        // // Zero Gyro
+        // new JoystickButton(driver, XboxController.Button.kY.value).onTrue(new InstantCommand(() -> s_Swerve.zeroHeading()));
         // Toggle Half Speed (start a new scope for toggleHalfSpeedCommand)
         {
             InstantCommand toggleHalfSpeedCommand = new InstantCommand(() -> {s_Swerve.toggleHalfSpeed();}, s_Swerve);
@@ -133,6 +120,31 @@ public class RobotContainer {
         // new JoystickButton(operator, 10).onTrue(); // 10 - HP
         new JoystickButton(operator, 11).onTrue(new IntakeCommand(s_Intake, PivotState.GROUND, IndexerSpeed.INTAKE)); // 11 - intake out
         new JoystickButton(operator, 12).onTrue(new IntakeCommand(s_Intake, PivotState.STOW, IndexerSpeed.NONE)); // 12 - intake in
+    }
+
+    private void registerNamedCommands() {
+        NamedCommands.registerCommand("Spin Up Shooter", new InstantCommand(() -> s_Shooter.setMotor(-0.75,-0.75)));
+
+        NamedCommands.registerCommand("Ground Intake", new InstantCommand(() -> {
+            s_Intake.setPivotState(PivotState.GROUND);
+            s_Intake.setIndexerSpeed(IndexerSpeed.INTAKE);
+        }, s_Intake));
+        
+        NamedCommands.registerCommand("Stow Intake", new InstantCommand(() -> {
+            s_Intake.setPivotState(PivotState.STOW);
+            s_Intake.setIndexerSpeed(IndexerSpeed.PULSE);
+        }, s_Intake));
+        
+        NamedCommands.registerCommand("Score Gamepiece", new InstantCommand(() -> {
+            s_Intake.setPivotState(PivotState.NONE);
+            s_Intake.setIndexerSpeed(IndexerSpeed.FEED_SHOOTER);
+        }, s_Intake));
+        
+        NamedCommands.registerCommand("Stop Indexer", new InstantCommand(() -> s_Intake.setIndexerSpeed(IndexerSpeed.NONE), s_Intake));
+
+        NamedCommands.registerCommand("Stop Shooter", new InstantCommand(() -> s_Shooter.shooterOff(), s_Shooter));
+
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> s_Intake.setIndexerSpeed(IndexerSpeed.INTAKE), s_Intake));
     }
 
     /**

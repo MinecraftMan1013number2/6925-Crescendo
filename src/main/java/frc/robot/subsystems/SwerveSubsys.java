@@ -177,4 +177,13 @@ public class SwerveSubsys extends SubsystemBase {
 
         SmartDashboard.putBoolean("0.5x Speed", halfSpeed);
     }
+
+   /**
+    * SysID stuff
+    */
+    public void setVoltage(double volts) {
+        for (SwerveModule mod : mSwerveMods) {
+            mod.setVoltage(volts);
+        }
+    }
 }
