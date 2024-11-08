@@ -186,4 +186,8 @@ public class SwerveSubsys extends SubsystemBase {
             mod.setVoltage(volts);
         }
     }
+
+    public Rotation2d geRotation2d() {
+        return gyro.getRotation2d();
+    }
 }

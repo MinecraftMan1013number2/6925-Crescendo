@@ -76,7 +76,7 @@ public class RobotContainer {
         CameraServer.startAutomaticCapture();
 
         // Setup photonvision
-        photonVision = new PhotonVisionHandler("OV9782");
+        photonVision = new PhotonVisionHandler(this, "OV9782");
         // photonVision = null;
     }
 

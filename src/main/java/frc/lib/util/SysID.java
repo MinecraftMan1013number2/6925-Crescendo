@@ -1,37 +1,50 @@
 package frc.lib.util;
 
 import com.ctre.phoenix6.SignalLogger;
-
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.subsystems.SwerveSubsys;
 
 public class SysID {
-    private final SysIdRoutine routine;
+    private final SysIdRoutine sysIdRoutine;
     
     public SysID(SwerveSubsys swerveSubsys) {
         // Configure SignalLogger API through CTRE
         SignalLogger.setPath("/signal-logger-logs/");
         SignalLogger.start();
         
-        // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
-        Config config = new Config();
-        Mechanism mechanism = new Mechanism(null, null, swerveSubsys);
+        SysIdRoutine.Config config = new SysIdRoutine.Config(
+            null,               // Use default ramp rate (1 V/s)
+            Units.Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+            null,                // Use default timeout (10 s)
+            // Log state with Phoenix SignalLogger class
+            (state) -> SignalLogger.writeString("state", state.toString())
+        );
+        SysIdRoutine.Mechanism mechanism = new SysIdRoutine.Mechanism(
+            (voltage) -> swerveSubsys.setVoltage(voltage.in(Units.Volts)),
+            null,
+            swerveSubsys
+        );
 
-        // new Mechanism(
-        //     // Tell SysId how to plumb the driving voltage to the motors.
-        //     voltage -> swerveSubsys.setVoltage(voltage),
-        //     // Tell SysId how to record a frame of data for each motor on the mechanism being
-        //     // characterized.
-        //     null,
-        //     // Tell SysId to make generated commands require this subsystem, suffix test state in
-        //     // WPILog with this subsystem's name ("drive")
-        //     swerveSubsys);
+        sysIdRoutine = new SysIdRoutine(config, mechanism);
+    }
 
-        // routine = new SysIdRoutine(config, mechanism);
-        routine = null;
+    /**
+     * Quasistatic:
+     * In this test, the mechanism is gradually sped-up such that the voltage
+     * corresponding to acceleration is negligible (hence, “as if static”)
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.quasistatic(direction);
+    }
+
+    /**
+     * Dynamic:
+     * In this test, a constant ‘step voltage’ is given to the mechanism,
+     * so that the behavior while accelerating can be determined
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.dynamic(direction);
     }
 }
