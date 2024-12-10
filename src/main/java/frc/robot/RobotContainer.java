@@ -4,6 +4,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -46,7 +47,7 @@ public class RobotContainer {
     public final IntakeSubsys s_Intake = new IntakeSubsys();
     public final ClimberLeft s_ClimberLeft = new ClimberLeft();
     public final ClimberRight s_ClimberRight = new ClimberRight();
-    private final PhotonVisionHandler photonVision;
+    public final PhotonVisionHandler photonVision;
 
      /* AutoChooser */
     private final SendableChooser<Command> autoChooser;
@@ -76,7 +77,8 @@ public class RobotContainer {
         CameraServer.startAutomaticCapture();
 
         // Setup photonvision
-        photonVision = new PhotonVisionHandler(this, "OV9782");
+        PortForwarder.add(5800, "photonvision.local", 5800);
+        photonVision = new PhotonVisionHandler(this, "Arducam_OV9281_USB_Camera");
         // photonVision = null;
     }
 
@@ -84,7 +86,7 @@ public class RobotContainer {
         // Driver Buttons
         s_Swerve.setDefaultCommand(
             new TeleopSwerve(
-                s_Swerve, 
+                s_Swerve,
                 () -> -driver.getRawAxis(translationAxis), 
                 () -> -driver.getRawAxis(strafeAxis), 
                 () -> -driver.getRawAxis(rotationAxis)
@@ -92,8 +94,13 @@ public class RobotContainer {
             )
         );
 
-        new JoystickButton(driver, XboxController.Button.kY.value).whileTrue(new TeleopSwerve(s_Swerve, ()->1, ()->0, ()->0));
-        new JoystickButton(driver, XboxController.Button.kA.value).whileTrue(new TeleopSwerve(s_Swerve, ()->-1, ()->0, ()->0));
+        new JoystickButton(driver, XboxController.Button.kLeftBumper.value).onTrue(new InstantCommand(() -> s_Swerve.invert(), s_Swerve));
+
+        final double slowMoveVal = 0.15;
+        new JoystickButton(driver, XboxController.Button.kY.value).whileTrue(new TeleopSwerve(s_Swerve, ()->slowMoveVal, ()->0, ()->0));
+        new JoystickButton(driver, XboxController.Button.kA.value).whileTrue(new TeleopSwerve(s_Swerve, ()->-slowMoveVal, ()->0, ()->0));
+        new JoystickButton(driver, XboxController.Button.kX.value).whileTrue(new TeleopSwerve(s_Swerve, ()->0, ()->slowMoveVal, ()->0));
+        new JoystickButton(driver, XboxController.Button.kB.value).whileTrue(new TeleopSwerve(s_Swerve, ()->0, ()->-slowMoveVal, ()->0));
 
         // // Zero Gyro
         // new JoystickButton(driver, XboxController.Button.kY.value).onTrue(new InstantCommand(() -> s_Swerve.zeroHeading()));

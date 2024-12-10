@@ -1,16 +1,11 @@
 package frc.robot.photonvision;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import org.photonvision.targeting.TargetCorner;
 
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
@@ -18,11 +13,12 @@ import frc.robot.RobotContainer;
 public class PhotonVisionHandler extends SubsystemBase {
     /**
      * Constants
-     */
-    private static final double kCameraHeight = 0.0;
-    private static final double kCameraPitch = 0.0;
-    private static final double kTargetHeight = 0.0;
-    private static final double kTargetPitch = 0.0;
+    //  */
+    // private final double kCameraHeight = Units.inchesToMeters(27.0);
+    private final double kCameraHeight = Units.inchesToMeters(17+3.5);
+    private final double kCameraPitch = 0.0;
+    // private final double kTargetHeight = Units.inchesToMeters(1.0);
+    private final double kTargetHeight = Units.inchesToMeters(25);
 
     private final RobotContainer instance;
     private final PhotonCamera photonCamera;
@@ -64,47 +60,39 @@ public class PhotonVisionHandler extends SubsystemBase {
          * Transform2d getCameraToTarget(): The camera to target transform
          */
         PhotonTrackedTarget target = getClosestTarget();
-        String[] cornersAsStrings = new String[target.getDetectedCorners().size()];
-        for (int i = 0; i < target.getDetectedCorners().size(); i++) {
-            cornersAsStrings[i] = target.getDetectedCorners().get(i).toString();
+        if (target != null) {
+            SmartDashboard.putNumber("PV Yaw", round(target.getYaw()));
+            SmartDashboard.putNumber("PV Pitch", round(target.getPitch()));
+            SmartDashboard.putNumber("PV Area", round(target.getArea()));
+            SmartDashboard.putNumber("PV Skew", round(target.getSkew()));
+
+            SmartDashboard.putNumber("Camera dist (in)", Units.metersToInches(PhotonUtils.calculateDistanceToTargetMeters(kCameraHeight, kTargetHeight, kCameraPitch, Math.toRadians(target.getPitch()))));
+
+            /**
+             * DATA INFO
+             * notes:
+             *   - on cart (yaw, pitch) & on ground (yaw, pitch)
+             *   - note in bottom left: (9.44, -31.51) & (5.5, 29.97)
+             *   - note in top right: (-16.94, -14.83) & (-6.19, -12.37)
+             *   - (~0, ~0): ?
+             * yaw: left (more negative) / right (more positive)
+             * pitch: forward (more negative) / backward (more positive)
+             * area: closeness (bigger = closer, smaller = farther)
+             * skew: ? (always 0)
+             */
         }
-        SmartDashboard.putNumber("PV Yaw", target.getYaw());
-        SmartDashboard.putNumber("PV Pitch", target.getPitch());
-        SmartDashboard.putNumber("PV Area", target.getArea());
-        SmartDashboard.putNumber("PV Skew", target.getSkew());
-        SmartDashboard.putStringArray("PV Corners", cornersAsStrings);
-        SmartDashboard.putString("PV CameraToTarget", target.getBestCameraToTarget().toString());
     }
 
-    private boolean startedLogging = false;
+    private double round(double input) {
+        return round(input, 2);
+    }
+    private double round(double input, int places) {
+        double amt = Math.pow(10, places);
+        return Math.round(input*amt)/amt;
+    }
+
     @Override
     public void periodic() {
-        if (
-            instance.s_Swerve.getPose().getTranslation().getX() == 0 ||
-            instance.s_Swerve.getPose().getTranslation().getY() == 0 ||
-            getClosestTarget() == null
-        ) return;
-        
-        if (!startedLogging) {
-            startedLogging = true;
-            DriverStation.reportWarning("Started logging PV values to SmartDashboard!", false);
-        }
-
         outputData();
     }
-
-    // public void estimate() {
-    //     PhotonTrackedTarget target = getClosestTarget();
-    //     // Calculate robot's field relative pose
-    //     Pose2d robotPose = PhotonUtils.estimateFieldToRobot(
-    //         kCameraHeight,
-    //         kTargetHeight,
-    //         kCameraPitch,
-    //         kTargetPitch,
-    //         Rotation2d.fromDegrees(-target.getYaw()),
-    //         instance.s_Swerve.geRotation2d(),
-    //         ,
-    //         cameraToRobot
-    //     );
-    // }
 }

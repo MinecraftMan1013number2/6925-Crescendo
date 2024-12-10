@@ -32,6 +32,7 @@ public class SwerveSubsys extends SubsystemBase {
     private final Pigeon2 gyro;
     // private final Field2d field = new Field2d();
     private boolean halfSpeed = false;
+    private boolean inverted = false;
 
     public SwerveSubsys() {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
@@ -79,12 +80,16 @@ public class SwerveSubsys extends SubsystemBase {
         halfSpeed = !halfSpeed;
     }
 
+    public void invert() {
+        inverted = !inverted;
+    }
+
     public void drive(Translation2d translation, double rotation/*, boolean fieldRelative */, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.swerveKinematics.toSwerveModuleStates(
                 /*fieldRelative ? */ChassisSpeeds.fromFieldRelativeSpeeds(
-                    translation.getX(), 
-                    translation.getY(), 
+                    translation.getX() * (inverted ? -1 : 1), 
+                    translation.getY() * (inverted ? -1 : 1),
                     rotation, 
                     getHeading()
                 )
