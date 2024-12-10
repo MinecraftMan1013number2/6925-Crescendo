@@ -14,11 +14,9 @@ public class PhotonVisionHandler extends SubsystemBase {
     /**
      * Constants
     //  */
-    // private final double kCameraHeight = Units.inchesToMeters(27.0);
-    private final double kCameraHeight = Units.inchesToMeters(17+3.5);
+    private final double kCameraHeight = Units.inchesToMeters(27.0);
     private final double kCameraPitch = 0.0;
-    // private final double kTargetHeight = Units.inchesToMeters(1.0);
-    private final double kTargetHeight = Units.inchesToMeters(25);
+    private final double kTargetHeight = Units.inchesToMeters(1.0);
 
     private final RobotContainer instance;
     private final PhotonCamera photonCamera;
